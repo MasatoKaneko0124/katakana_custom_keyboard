@@ -15,6 +15,9 @@ class KatakanaCustomKeyboardWithTimer extends ConsumerStatefulWidget {
     this.onBackKeyTapped,
     this.onSettingKeyTapped,
     this.onOptionalKeyTapped,
+    this.onTimerStarted,
+    this.onTimerEnded,
+    this.onTimerStopped,
     this.optionalKeyChild,
     required this.width,
     required this.height,
@@ -29,6 +32,9 @@ class KatakanaCustomKeyboardWithTimer extends ConsumerStatefulWidget {
   final void Function()? onBackKeyTapped;
   final void Function()? onSettingKeyTapped;
   final void Function()? onOptionalKeyTapped;
+  final void Function()? onTimerStarted;
+  final void Function()? onTimerEnded;
+  final void Function()? onTimerStopped;
   final Widget? optionalKeyChild;
   final double width;
   final double height;
@@ -109,11 +115,16 @@ class KatakanaCustomKeyboardWithTimerState
   }
 
   void _startTimer() {
+    widget.onTimerStarted?.call();
     _timer = Timer(Duration(milliseconds: widget.timerDurationMsec), () {
       // 連続タップの評価
       _isRepeatingTap = false;
+      widget.onTimerEnded?.call();
     });
   }
 
-  void _stopTimer() => _timer?.cancel();
+  void _stopTimer() {
+    _timer?.cancel();
+    widget.onTimerStopped?.call();
+  }
 }
