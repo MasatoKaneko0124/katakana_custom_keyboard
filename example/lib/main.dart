@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:katakana_custom_keyboard/katakana_custom_keyboard.dart';
-import 'package:katakana_custom_keyboard/model/key_theme_model.dart';
-import 'package:katakana_custom_keyboard/model/keyboard_theme_model.dart';
+import 'package:katakana_custom_keyboard/katakana_custom_keyboard_with_timer.dart';
 
 void main() {
   runApp(ProviderScope(child: const MyApp()));
@@ -52,30 +50,17 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: <Widget>[
             Text(_label, style: Theme.of(context).textTheme.headlineMedium),
-            KatakanaCustomKeyboard(
-              onKanaKeyTapped: (inputKey) => _setLabel(inputKey),
+            KatakanaCustomKeyboardWithTimer(
+              onKanaInput: (input) => _setLabel(input ?? "null"),
               onDeleteKeyTapped: () => _setLabel("削除"),
-              onDiacriticKeyTapped: () => _setLabel("濁点・半濁点"),
+              onDiacriticKeyTapped: null,
               onNextKeyTapped: () => _setLabel("次へ"),
               onBackKeyTapped: () => _setLabel("前へ"),
               onSettingKeyTapped: () => _setLabel("設定"),
+              onOptionalKeyTapped: () => _setLabel("オプションキー"),
+              optionalKeyChild: Icon(Icons.search, color: Colors.white),
               width: MediaQuery.of(context).size.width,
               height: 300,
-              theme: KeyboardThemeModel(
-                mainKeyTheme: KeyThemeModel(),
-                flickSelectedKeyTheme: KeyThemeModel(
-                  backgroundColor: 0xFFFFCC80,
-                ),
-                flickUnselectedKeyTheme: KeyThemeModel(
-                  backgroundColor: 0xFF616161,
-                ),
-                nextAndBackKeyTheme: KeyThemeModel(
-                  backgroundColor: 0xFF9E9E9E,
-                  iconSize: 24,
-                  fontSize: 14,
-                ),
-                extraKeyTheme: KeyThemeModel(backgroundColor: 0xFF9E9E9E),
-              ),
             ),
           ],
         ),

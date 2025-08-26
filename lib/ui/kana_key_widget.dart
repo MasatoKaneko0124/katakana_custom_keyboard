@@ -12,7 +12,7 @@ class KanaKeyWidget extends ConsumerStatefulWidget {
     super.key,
     required this.mainCharacter,
     required this.flickCharacterMap,
-    required this.onKeyInputted,
+    required this.onKeyTapped,
     required this.onFlickStart,
     required this.onFlickEnd,
     required this.width,
@@ -24,9 +24,9 @@ class KanaKeyWidget extends ConsumerStatefulWidget {
 
   final String mainCharacter;
   final Map<FlickDirection, String> flickCharacterMap;
-  final Function(String) onKeyInputted;
+  final Function(String) onKeyTapped;
   final Function() onFlickStart;
-  final Function() onFlickEnd;
+  final Function(String) onFlickEnd;
   final double width;
   final double height;
   final KeyThemeModel mainKeyTheme;
@@ -52,26 +52,20 @@ class _KanaKeyWidgetState extends ConsumerState<KanaKeyWidget> {
     final kanaKeyNotifier = _kanaKeyViewModel.notifier;
 
     return GestureDetector(
-      onTap: () => widget.onKeyInputted(kanaKey.currentSelectedCharacter ?? ''),
+      onTap: () => widget.onKeyTapped(kanaKey.currentSelectedCharacter ?? ''),
       onLongPressStart: (_) {
         widget.onFlickStart();
         ref.read(kanaKeyNotifier).startFlick();
       },
       onLongPressMoveUpdate: (details) =>
           _handleFlickUpdate(details.globalPosition),
-      onLongPressEnd: (_) {
-        _handleFlickEnd(kanaKey);
-        widget.onFlickEnd();
-      },
+      onLongPressEnd: (_) => _handleFlickEnd(kanaKey),
       onPanStart: (_) {
         widget.onFlickStart();
         ref.read(kanaKeyNotifier).startFlick();
       },
       onPanUpdate: (details) => _handleFlickUpdate(details.globalPosition),
-      onPanEnd: (_) {
-        _handleFlickEnd(kanaKey);
-        widget.onFlickEnd();
-      },
+      onPanEnd: (_) => _handleFlickEnd(kanaKey),
       child: Stack(
         children: [
           // フリック中に、各方向のフリックキー(候補キー)を表示する
@@ -85,8 +79,8 @@ class _KanaKeyWidgetState extends ConsumerState<KanaKeyWidget> {
             height: widget.height,
             keyTheme: kanaKey.isFlicking
                 ? (kanaKey.currentFlickDirection == FlickDirection.none
-                      ? widget.flickSelectedKeyTheme
-                      : widget.flickUnselectedKeyTheme)
+                    ? widget.flickSelectedKeyTheme
+                    : widget.flickUnselectedKeyTheme)
                 : widget.mainKeyTheme,
           ),
         ],
@@ -124,7 +118,7 @@ class _KanaKeyWidgetState extends ConsumerState<KanaKeyWidget> {
 
   /// フリック終了時に入力キーを通知して状態をリセットする
   void _handleFlickEnd(KanaKeyModel key) {
-    widget.onKeyInputted(key.currentSelectedCharacter ?? '');
+    widget.onFlickEnd(key.currentSelectedCharacter ?? '');
     ref.read(_kanaKeyViewModel.notifier).endFlick();
   }
 
