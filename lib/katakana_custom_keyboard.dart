@@ -9,27 +9,41 @@ import 'package:katakana_custom_keyboard/utils/iterable_ext.dart';
 import 'model/keyboard_theme_model.dart';
 
 class KatakanaCustomKeyboard extends ConsumerStatefulWidget {
-  const KatakanaCustomKeyboard({
+  KatakanaCustomKeyboard({
     super.key,
     required this.onKanaKeyTapped,
+    this.onKanaKeyFlickStarted,
+    this.onKanaKeyFlickEnded,
     required this.onDeleteKeyTapped,
     required this.onDiacriticKeyTapped,
     required this.onNextKeyTapped,
     required this.onBackKeyTapped,
     required this.onSettingKeyTapped,
+    this.onOptionalKeyTapped,
+    this.optionalKeyChild,
     required this.width,
     required this.height,
-    required this.theme,
-  });
-  final Function(String) onKanaKeyTapped;
-  final Function() onDeleteKeyTapped;
-  final Function() onDiacriticKeyTapped;
-  final Function() onNextKeyTapped;
-  final Function() onBackKeyTapped;
-  final Function() onSettingKeyTapped;
+    KeyboardThemeModel? theme,
+  }) {
+    if (theme == null) {
+      this.theme = KeyboardThemeModel.defaultTheme();
+    } else {
+      this.theme = theme;
+    }
+  }
+  final void Function(String) onKanaKeyTapped;
+  final void Function(String)? onKanaKeyFlickStarted;
+  final void Function(String)? onKanaKeyFlickEnded;
+  final void Function() onDeleteKeyTapped;
+  final void Function() onDiacriticKeyTapped;
+  final void Function() onNextKeyTapped;
+  final void Function() onBackKeyTapped;
+  final void Function() onSettingKeyTapped;
+  final void Function()? onOptionalKeyTapped;
+  final Widget? optionalKeyChild;
   final double width;
   final double height;
-  final KeyboardThemeModel theme;
+  late final KeyboardThemeModel theme;
 
   @override
   ConsumerState<KatakanaCustomKeyboard> createState() =>
@@ -50,6 +64,7 @@ class _CrosswordKeyboardWidgetState
   late final Widget _nextKeyWidget; // 次のセルに移動するキー(initStateで初期化する)
   late final Widget _backKeyWidget; // 前のセルに移動するキー(initStateで初期化する)
   late final Widget _settingKeyWidget; // 設定キー(initStateで初期化する)
+  late final Widget? _optionalKeyWidget; // オプションキー(initStateで初期化する)
   final _selectingKeyWidgets = StateProvider<Widget?>((_) => null); // フリック中のキー
 
   @override
@@ -63,6 +78,7 @@ class _CrosswordKeyboardWidgetState
     _nextKeyWidget = _buildNextKeyWidget();
     _backKeyWidget = _buildBackKeyWidget();
     _settingKeyWidget = _buildSettingKeyWidget();
+    _optionalKeyWidget = _buildOptionalKeyWidget();
     super.initState();
   }
 
@@ -82,6 +98,8 @@ class _CrosswordKeyboardWidgetState
           // フリック中のKanaKeyWidgetをStackの最後に重ね直す
           if (ref.watch(_selectingKeyWidgets) != null)
             ref.watch(_selectingKeyWidgets)!,
+          if (widget.optionalKeyChild != null && _optionalKeyWidget != null)
+            _optionalKeyWidget,
         ],
       ),
     );
@@ -98,11 +116,17 @@ class _CrosswordKeyboardWidgetState
       child: KanaKeyWidget(
         mainCharacter: kanaData.key,
         flickCharacterMap: kanaData.value,
-        onKeyInputted: widget.onKanaKeyTapped,
-        onFlickStart: () => ref.read(_selectingKeyWidgets.notifier).state =
-            _kanaKeyWidgets[index], // フリック中のキーを更新
-        onFlickEnd: () => ref.read(_selectingKeyWidgets.notifier).state =
-            null, // フリック終了時、フリック中のキーをリセット
+        onKeyTapped: widget.onKanaKeyTapped,
+        onFlickStart: () {
+          ref.read(_selectingKeyWidgets.notifier).state =
+              _kanaKeyWidgets[index];
+          widget.onKanaKeyFlickStarted?.call(kanaData.key);
+        }, // フリック中のキーを更新
+        onFlickEnd: (flickedChar) {
+          // フリック終了時、フリック中のキーをリセット
+          ref.read(_selectingKeyWidgets.notifier).state = null;
+          widget.onKanaKeyFlickEnded?.call(flickedChar);
+        },
         width: _squareWidth,
         height: _squareHeight,
         mainKeyTheme: widget.theme.mainKeyTheme,
@@ -122,13 +146,11 @@ class _CrosswordKeyboardWidgetState
         left = _leftPadding + index * (_squareWidth + _horizontalGap);
         top = _squareHeight;
       case < _keysPerRow * 2: // 2段目
-        left =
-            _leftPadding +
+        left = _leftPadding +
             (index - _keysPerRow) * (_squareWidth + _horizontalGap);
         top = _squareHeight * 2;
       case < _keysPerRow * 3: // 3段目
-        left =
-            _leftPadding +
+        left = _leftPadding +
             (index - _keysPerRow * 2) * (_squareWidth + _horizontalGap);
         top = _squareHeight * 3;
       case == _specialKeyIndex: // 特殊な配置を行うキー
@@ -205,6 +227,20 @@ class _CrosswordKeyboardWidgetState
         height: _squareHeight,
         keyTheme: widget.theme.extraKeyTheme,
         icon: Icons.settings,
+      ),
+    );
+  }
+
+  Widget _buildOptionalKeyWidget() {
+    return Positioned(
+      left: _leftPadding + (_keysPerRow) * (_squareWidth + _horizontalGap),
+      top: _squareHeight * 3,
+      child: ExtraKeyWidget(
+        onKeyTapped: () => widget.onOptionalKeyTapped?.call(),
+        width: _squareWidth,
+        height: _squareHeight * 2,
+        keyTheme: widget.theme.extraKeyTheme,
+        child: widget.optionalKeyChild,
       ),
     );
   }
