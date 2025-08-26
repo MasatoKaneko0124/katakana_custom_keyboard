@@ -1,3 +1,7 @@
+## 0.0.3
+
+- KatakanaCustomKeyboardWithTimerクラスにonTimerStarted,onTimerEnded,onTimerStoppedコールバックを実装
+
 ## 0.0.2
 
 - KatakanaCustomKeyboardWithTimerクラスを追加

@@ -32,10 +32,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _label = "キーを押してください";
+  String _label2 = "";
 
   void _setLabel(String label) {
     setState(() {
       _label = label;
+    });
+  }
+
+  void _setLabel2(String label2) {
+    setState(() {
+      _label2 = label2;
     });
   }
 
@@ -50,6 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: <Widget>[
             Text(_label, style: Theme.of(context).textTheme.headlineMedium),
+            Text(_label2, style: Theme.of(context).textTheme.headlineMedium),
             KatakanaCustomKeyboardWithTimer(
               onKanaInput: (input) => _setLabel(input ?? "null"),
               onDeleteKeyTapped: () => _setLabel("削除"),
@@ -58,7 +66,11 @@ class _MyHomePageState extends State<MyHomePage> {
               onBackKeyTapped: () => _setLabel("前へ"),
               onSettingKeyTapped: () => _setLabel("設定"),
               onOptionalKeyTapped: () => _setLabel("オプションキー"),
+              onTimerStarted: () => _setLabel2("onTimerStarted"),
+              onTimerEnded: () => _setLabel2("onTimerEnded"),
+              onTimerStopped: () => _setLabel2("onTimerStopped"),
               optionalKeyChild: Icon(Icons.search, color: Colors.white),
+              timerDurationMsec: 1200,
               width: MediaQuery.of(context).size.width,
               height: 300,
             ),
